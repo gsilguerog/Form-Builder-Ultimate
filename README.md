@@ -102,3 +102,6 @@ Las contribuciones son bienvenidas. Si tienes ideas para mejorar la lógica de a
 
 ## 📄 Licencia
 Este proyecto está bajo la Licencia MIT - eres libre de usarlo y modificarlo para proyectos personales o comerciales.
+
+## 🌎 Preview
+https://gsilguerog.github.io/Form-Builder-Ultimate/FBU/
