@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Builder Ultimate (V6 - Final)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-size: 0.9rem;
+        }
+
+        #form-canvas {
+            min-height: 500px;
+            background-color: white;
+            border: 2px dashed #adb5bd;
+            border-radius: 0.5rem;
+            padding: 20px;
+            position: relative;
+        }
+
+        .drop-zone {
+            min-height: 50px;
+            background-color: #f8f9fa;
+            border: 1px dashed #dee2e6;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 5px;
+        }
+
+        .drop-zone.sortable-ghost {
+            background-color: #e9ecef;
+            border-color: #0d6efd;
+        }
+
+        .drop-zone:empty::after {
+            content: "Soltar aquí";
+            color: #ced4da;
+            font-size: 0.8rem;
+            text-align: center;
+            display: block;
+            padding-top: 10px;
+        }
+
+        /* --- WRAPPERS (CLICKABLE) --- */
+        .form-component-wrapper {
+            position: relative;
+            padding: 25px 15px 15px;
+            border: 1px solid transparent;
+            margin-bottom: 15px;
+            background: #fff;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .form-component-wrapper:hover {
+            border: 1px solid #0d6efd;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
+            z-index: 5;
+        }
+
+        /* Desactivar clicks internos para facilitar edición */
+        .component-preview input,
+        .component-preview select,
+        .component-preview textarea {
+            pointer-events: none;
+            background-color: #fff !important;
+        }
+
+        .component-actions {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            display: none;
+            z-index: 100;
+        }
+
+        .form-component-wrapper:hover .component-actions {
+            display: block;
+        }
+
+        .btn-delete {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border-radius: 50%;
+            border: 1px solid #dc3545;
+            background: #fff;
+            color: #dc3545;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-delete:hover {
+            background: #dc3545;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .is-hidden-preview {
+            opacity: 0.5;
+            border: 1px dashed #dc3545;
+        }
+
+        .sidebar-sticky {
+            position: sticky;
+            top: 20px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .preview-table th,
+        .preview-table td {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card shadow-sm sidebar-sticky">
+                    <div class="card-header bg-dark text-white"><i class="bi bi-tools me-2"></i>Herramientas</div>
+                    <div class="card-body p-2">
+                        <div id="component-list" class="d-grid gap-2">
+                            <small class="text-muted fw-bold">Estructura</small>
+                            <div class="btn btn-outline-dark draggable-item text-start" data-type="grid"><i
+                                    class="bi bi-layout-three-columns me-2"></i> Fila (Grid)</div>
+                            <div class="btn btn-outline-dark draggable-item text-start" data-type="table"><i
+                                    class="bi bi-table me-2"></i> Tabla</div>
+
+                            <small class="text-muted fw-bold mt-2">Inputs</small>
+                            <div class="btn btn-outline-secondary draggable-item text-start" data-type="input"><i
+                                    class="bi bi-fonts me-2"></i> Texto</div>
+                            <div class="btn btn-outline-secondary draggable-item text-start" data-type="email"><i
+                                    class="bi bi-envelope me-2"></i> Email</div>
+                            <div class="btn btn-outline-secondary draggable-item text-start" data-type="textarea"><i
+                                    class="bi bi-textarea-t me-2"></i> Textarea</div>
+
+                            <small class="text-muted fw-bold mt-2">Selección</small>
+                            <div class="btn btn-outline-secondary draggable-item text-start" data-type="select"><i
+                                    class="bi bi-menu-down me-2"></i> Select</div>
+                            <div class="btn btn-outline-secondary draggable-item text-start" data-type="radio"><i
+                                    class="bi bi-ui-radios me-2"></i> Radio</div>
+                            <div class="btn btn-outline-secondary draggable-item text-start" data-type="checkbox"><i
+                                    class="bi bi-check-square me-2"></i> Checkbox</div>
+
+                            <small class="text-muted fw-bold mt-2">Especiales</small>
+                            <div class="btn btn-outline-secondary draggable-item text-start" data-type="date"><i
+                                    class="bi bi-calendar-date me-2"></i> Fecha</div>
+                            <div class="btn btn-outline-secondary draggable-item text-start" data-type="switch"><i
+                                    class="bi bi-toggle-on me-2"></i> Switch</div>
+
+                            <div class="btn btn-outline-primary draggable-item text-start mt-3" data-type="button"><i
+                                    class="bi bi-send me-2"></i> Botón</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Formulario (Click para editar)</span>
+                        <button class="btn btn-sm btn-success" onclick="exportHTML()"><i
+                                class="bi bi-code-slash me-1"></i> Ver HTML</button>
+                    </div>
+                    <div class="card-body bg-light">
+                        <form id="generated-form" onsubmit="event.preventDefault()">
+                            <div id="form-canvas" class="drop-zone-canvas p-3" style="min-height: 400px;"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Propiedades</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="edit-id-hidden">
+                    <input type="hidden" id="edit-type-hidden">
+
+                    <ul class="nav nav-tabs mb-3" id="editTabs">
+                        <li class="nav-item"><button class="nav-link active" data-bs-target="#tab-general"
+                                data-bs-toggle="tab">General</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-target="#tab-attrs"
+                                data-bs-toggle="tab">Atributos</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-target="#tab-options" data-bs-toggle="tab"
+                                id="tab-options-link">Opciones</button></li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="tab-general">
+                            <div class="row g-3">
+                                <div class="col-md-6" id="div-label">
+                                    <label class="form-label">Etiqueta</label>
+                                    <input type="text" class="form-control" id="edit-label">
+                                </div>
+                                <div class="col-md-6" id="div-name">
+                                    <label class="form-label">Name (Backend)</label>
+                                    <input type="text" class="form-control font-monospace" id="edit-name">
+                                </div>
+
+                                <div class="col-12 d-none" id="div-grid-config">
+                                    <hr>
+                                    <label class="form-label fw-bold">Columnas</label>
+                                    <select class="form-select" id="edit-grid-cols">
+                                        <option value="1">1 Columna</option>
+                                        <option value="2">2 Columnas</option>
+                                        <option value="3">3 Columnas</option>
+                                        <option value="4">4 Columnas</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-12 d-none" id="div-table-config">
+                                    <hr>
+                                    <div class="alert alert-info py-2"><i class="bi bi-info-circle"></i> Configuración
+                                        de Tabla</div>
+                                    <div class="row align-items-center">
+                                        <div class="col-auto"><label class="fw-bold">Columnas:</label></div>
+                                        <div class="col-auto"><input type="number" class="form-control"
+                                                id="edit-table-cols" min="1" max="10" style="width: 100px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tab-attrs">
+                            <div class="row g-3">
+                                <div class="col-12" id="div-placeholder">
+                                    <label class="form-label">Placeholder</label>
+                                    <input type="text" class="form-control" id="edit-placeholder">
+                                </div>
+                                <div class="col-12">
+                                    <hr>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox"
+                                            id="check-required"><label class="form-check-label">Required</label></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox"
+                                            id="check-readonly"><label class="form-check-label">Readonly</label></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox"
+                                            id="check-hidden"><label class="form-check-label">Hidden</label></div>
+                                </div>
+                                <div class="col-md-4 mt-3" id="div-password-option">
+                                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox"
+                                            id="check-is-password"><label class="form-check-label">Es Password</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mt-3" id="div-inline-option">
+                                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox"
+                                            id="check-inline"><label class="form-check-label">Inline</label></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tab-options">
+                            <div id="options-manager">
+                                <label class="form-label">Opciones</label>
+                                <div id="options-list-container" class="mb-2"></div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addOptionRow()"><i
+                                        class="bi bi-plus"></i> Agregar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveChanges()">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="exportModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Código HTML Generado</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-dark">
+                    <textarea id="export-textarea" class="form-control border-0 p-3 bg-dark text-white font-monospace"
+                        rows="15" readonly></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="copyToClipboard()"><i
+                            class="bi bi-clipboard me-2"></i>Copiar Código</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+    <script>
+        // --- 1. CONFIGURACIÓN DRAG & DROP ---
+        new Sortable(document.getElementById('component-list'), {
+            group: { name: 'shared', pull: 'clone', put: false },
+            animation: 150, sort: false
+        });
+
+        function initDropZones() {
+            const zones = document.querySelectorAll('#form-canvas, .drop-zone');
+            zones.forEach(zone => {
+                if (zone.classList.contains('sortable-initialized')) return;
+                new Sortable(zone, {
+                    group: 'shared', animation: 150, ghostClass: 'sortable-ghost',
+                    onAdd: function (evt) {
+                        const item = evt.item;
+                        if (item.classList.contains('draggable-item')) {
+                            const type = item.getAttribute('data-type');
+                            item.outerHTML = createComponent(type);
+                            setTimeout(initDropZones, 50);
+                        }
+                    }
+                });
+                zone.classList.add('sortable-initialized');
+            });
+        }
+
+        initDropZones();
+
+        // --- 2. CREACIÓN DE COMPONENTES ---
+        function createComponent(type) {
+            const id = Math.random().toString(36).substr(2, 9);
+            let content = '';
+
+            switch (type) {
+                case 'grid':
+                    content = `<div class="row g-2"><div class="col-md-6"><div class="drop-zone"></div></div><div class="col-md-6"><div class="drop-zone"></div></div></div>`;
+                    break;
+                case 'table':
+                    content = `
+                    <div class="table-responsive">
+                        <table class="table table-bordered preview-table" style="background:white;">
+                            <thead><tr><th>Col 1</th><th>Col 2</th><th>Col 3</th></tr></thead>
+                            <tbody><tr><td class="drop-zone"></td><td class="drop-zone"></td><td class="drop-zone"></td></tr></tbody>
+                        </table>
+                    </div>`;
+                    break;
+                case 'input': content = `<label class="form-label">Texto</label><input type="text" class="form-control" name="input_${id}">`; break;
+                case 'email': content = `<label class="form-label">Email</label><input type="email" class="form-control" name="email_${id}">`; break;
+                case 'textarea': content = `<label class="form-label">Mensaje</label><textarea class="form-control" name="area_${id}"></textarea>`; break;
+                case 'select': content = `<label class="form-label">Select</label><select class="form-select" name="sel_${id}"><option>Opción 1</option></select>`; break;
+                case 'radio': content = `<label class="form-label d-block">Radio</label><div class="opts-container"><div class="form-check"><input class="form-check-input" type="radio" name="rad_${id}" checked><label class="form-check-label">Opción 1</label></div></div>`; break;
+                case 'checkbox': content = `<label class="form-label d-block">Check</label><div class="opts-container"><div class="form-check"><input class="form-check-input" type="checkbox" name="chk_${id}[]"><label class="form-check-label">Opción 1</label></div></div>`; break;
+                case 'button': content = `<button class="btn btn-primary" name="btn_${id}">Enviar</button>`; break;
+                case 'date': content = `<label class="form-label">Fecha</label><input type="date" class="form-control" name="date_${id}">`; break;
+                case 'switch': content = `<div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" name="sw_${id}" id="sw_${id}"><label class="form-check-label" for="sw_${id}">Activar</label></div>`; break;
+            }
+
+            return `
+            <div class="form-component-wrapper" id="wrap-${id}" data-type="${type}" onclick="openEditModal('wrap-${id}', event)">
+                <div class="component-actions">
+                    <button type="button" class="btn-delete shadow-sm" title="Eliminar" onclick="deleteComponent('wrap-${id}', event)">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </div>
+                <div class="component-preview">${content}</div>
+            </div>`;
+        }
+
+        function deleteComponent(id, event) {
+            event.stopPropagation();
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        // --- 3. LÓGICA DEL MODAL DE EDICIÓN ---
+        let currentEditId = null;
+
+        function openEditModal(wrapperId, event) {
+            if (event) event.stopPropagation();
+
+            currentEditId = wrapperId;
+            const wrapper = document.getElementById(wrapperId);
+            const type = wrapper.getAttribute('data-type');
+            const preview = wrapper.querySelector('.component-preview');
+
+            document.querySelector('#editTabs button[data-bs-target="#tab-general"]').click();
+
+            const inputEl = preview.querySelector('input, select, textarea, button');
+            let labelEl = preview.querySelector('label.form-label');
+            if (['switch', 'checkbox', 'radio'].includes(type)) labelEl = preview.querySelector('label.form-label') || preview.querySelector('.form-check-label');
+            if (type === 'button') labelEl = preview.querySelector('button');
+
+            document.getElementById('edit-label').value = labelEl ? labelEl.innerText : '';
+            document.getElementById('edit-name').value = inputEl ? inputEl.name : '';
+
+            // VISIBILIDAD
+            const isGrid = type === 'grid';
+            const isTable = type === 'table';
+
+            document.getElementById('div-grid-config').classList.toggle('d-none', !isGrid);
+            if (isGrid) document.getElementById('edit-grid-cols').value = preview.querySelectorAll('.row > div').length;
+
+            document.getElementById('div-table-config').classList.toggle('d-none', !isTable);
+            if (isTable) document.getElementById('edit-table-cols').value = preview.querySelector('table thead tr').children.length;
+
+            // ATRIBUTOS
+            const hasInput = ['input', 'email', 'textarea', 'date'].includes(type);
+            document.getElementById('div-placeholder').classList.toggle('d-none', !hasInput);
+            if (hasInput && inputEl) document.getElementById('edit-placeholder').value = inputEl.placeholder;
+
+            if (inputEl) {
+                document.getElementById('check-required').checked = inputEl.hasAttribute('required');
+                document.getElementById('check-readonly').checked = inputEl.hasAttribute('readonly');
+                document.getElementById('check-is-password').checked = (type === 'input' && inputEl.type === 'password');
+            }
+            document.getElementById('check-hidden').checked = wrapper.classList.contains('is-hidden-preview');
+
+            document.getElementById('div-inline-option').classList.toggle('d-none', !['radio', 'checkbox'].includes(type));
+
+            // OPCIONES
+            const hasOptions = ['select', 'radio', 'checkbox'].includes(type);
+            document.getElementById('tab-options-link').parentElement.classList.toggle('d-none', !hasOptions);
+            document.getElementById('options-manager').classList.toggle('d-none', !hasOptions);
+
+            if (hasOptions) {
+                const list = document.getElementById('options-list-container'); list.innerHTML = '';
+                let opts = [];
+                if (type === 'select') preview.querySelectorAll('option').forEach(o => opts.push(o.innerText));
+                else preview.querySelectorAll('.form-check-label').forEach(l => opts.push(l.innerText));
+                opts.forEach(v => addOptionRow(v));
+            }
+
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
+        function addOptionRow(val = '') {
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `<input type="text" class="form-control opt-val" value="${val}"><button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">X</button>`;
+            document.getElementById('options-list-container').appendChild(div);
+        }
+
+        // --- 4. GUARDAR CAMBIOS ---
+        function saveChanges() {
+            const wrapper = document.getElementById(currentEditId);
+            const type = wrapper.getAttribute('data-type');
+            const preview = wrapper.querySelector('.component-preview');
+
+            const newLabel = document.getElementById('edit-label').value;
+            const newName = document.getElementById('edit-name').value;
+
+            if (type === 'button') preview.querySelector('button').innerText = newLabel;
+            else if (type === 'switch') preview.querySelector('.form-check-label').innerText = newLabel;
+            else { const l = preview.querySelector('label.form-label'); if (l) l.innerText = newLabel; }
+
+            preview.querySelectorAll('input, select, textarea').forEach(el => {
+                if (type !== 'checkbox') el.name = newName;
+                else el.name = newName.endsWith('[]') ? newName : newName + '[]';
+
+                // PLACEHOLDER FIX
+                const phVal = document.getElementById('edit-placeholder').value;
+                if (phVal) el.placeholder = phVal;
+                else el.removeAttribute('placeholder');
+
+                const toggleAttr = (id, attr) => document.getElementById(id).checked ? el.setAttribute(attr, 'true') : el.removeAttribute(attr);
+                toggleAttr('check-required', 'required');
+                toggleAttr('check-readonly', 'readonly');
+            });
+
+            wrapper.classList.toggle('is-hidden-preview', document.getElementById('check-hidden').checked);
+            if (type === 'input') preview.querySelector('input').type = document.getElementById('check-is-password').checked ? 'password' : 'text';
+
+            // Grid
+            if (type === 'grid') {
+                const row = preview.querySelector('.row');
+                const target = parseInt(document.getElementById('edit-grid-cols').value);
+                const current = row.children.length;
+                if (target > current) {
+                    for (let i = current; i < target; i++) row.innerHTML += `<div class="col"><div class="drop-zone"></div></div>`;
+                } else if (target < current) {
+                    if (confirm("¿Eliminar columnas sobrantes?")) for (let i = current; i > target; i--) row.lastElementChild.remove();
+                }
+                const span = Math.floor(12 / target);
+                Array.from(row.children).forEach(c => c.className = `col-md-${span}`);
+                initDropZones();
+            }
+
+            // Table
+            if (type === 'table') {
+                const table = preview.querySelector('table');
+                const theadTr = table.querySelector('thead tr');
+                const tbodyTrs = table.querySelectorAll('tbody tr');
+                const target = parseInt(document.getElementById('edit-table-cols').value);
+                const current = theadTr.children.length;
+
+                if (target > current) {
+                    for (let i = current; i < target; i++) {
+                        theadTr.appendChild(document.createElement('th')).innerText = `Col ${i + 1}`;
+                        tbodyTrs.forEach(tr => {
+                            const td = document.createElement('td'); td.className = 'drop-zone'; tr.appendChild(td);
+                        });
+                    }
+                    initDropZones();
+                } else if (target < current) {
+                    if (confirm("¿Eliminar columnas sobrantes?")) {
+                        for (let i = current; i > target; i--) {
+                            theadTr.lastElementChild.remove();
+                            tbodyTrs.forEach(tr => tr.lastElementChild.remove());
+                        }
+                    }
+                }
+            }
+
+            if (['select', 'radio', 'checkbox'].includes(type)) {
+                const vals = Array.from(document.querySelectorAll('.opt-val')).map(i => i.value).filter(v => v);
+                const isInline = document.getElementById('check-inline').checked;
+
+                if (type === 'select') {
+                    const sel = preview.querySelector('select'); sel.innerHTML = '';
+                    vals.forEach(v => { const o = document.createElement('option'); o.value = v; o.innerText = v; sel.appendChild(o); });
+                } else {
+                    const con = preview.querySelector('.opts-container'); con.innerHTML = '';
+                    vals.forEach((v, idx) => {
+                        const iId = wrapper.id + '_' + idx;
+                        const div = document.createElement('div');
+                        div.className = `form-check ${isInline ? 'form-check-inline' : ''}`;
+                        div.innerHTML = `<input class="form-check-input" type="${type}" name="${newName}${type === 'checkbox' ? '[]' : ''}" id="${iId}" value="${v}"><label class="form-check-label" for="${iId}">${v}</label>`;
+                        con.appendChild(div);
+                    });
+                }
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+        }
+
+        function exportHTML() {
+            const clone = document.getElementById('form-canvas').cloneNode(true);
+            clone.classList.remove('drop-zone-canvas');
+            clone.querySelectorAll('.component-actions').forEach(e => e.remove());
+            clone.querySelectorAll('.drop-zone').forEach(e => {
+                e.classList.remove('drop-zone', 'sortable-initialized');
+                e.removeAttribute('style');
+            });
+
+            clone.querySelectorAll('.form-component-wrapper').forEach(w => {
+                const content = w.querySelector('.component-preview').innerHTML;
+                const div = document.createElement('div');
+                div.className = 'mb-3' + (w.classList.contains('is-hidden-preview') ? ' d-none' : '');
+                div.innerHTML = content;
+                w.replaceWith(div);
+            });
+
+            let finalHtml = `<form>\n${clone.innerHTML.replace(/\n\s*\n/g, '\n')}\n</form>`;
+            finalHtml = finalHtml.replace(/style="[^"]*pointer-events:\s*none[^"]*"/g, '');
+
+            document.getElementById('export-textarea').value = finalHtml;
+            new bootstrap.Modal(document.getElementById('exportModal')).show();
+        }
+
+        function copyToClipboard() {
+            const textarea = document.getElementById('export-textarea');
+            textarea.select();
+            textarea.setSelectionRange(0, 99999); // Para móviles
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                alert('¡Código copiado al portapapeles!');
+            });
+        }
+    </script>
+</body>
+
+</html>
+
+<form>
