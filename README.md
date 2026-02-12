@@ -1,6 +1,8 @@
 # 🏗️ Form Builder Ultimate (Drag & Drop)
 ***Generador de formularios Bootstrap realizado con IA.***
 
+![IMAGE](https://github.com/gsilguerog/Form-Builder-Ultimate/blob/main/UFB.PNG?raw=true)
+
 Form Builder Ultimate es una herramienta web client-side (sin backend) que permite crear formularios HTML complejos visualmente utilizando una interfaz de "arrastrar y soltar" (Drag & Drop). Está construido sobre Bootstrap 5 y utiliza SortableJS para la gestión del movimiento de elementos.
 
 El objetivo principal es prototipar y generar código HTML limpio y listo para producción de manera rápida, eliminando la necesidad de escribir manualmente el boilerplate de formularios.
